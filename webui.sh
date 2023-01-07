@@ -23,7 +23,7 @@ fi
 # Install directory without trailing slash
 if [[ -z "${install_dir}" ]]
 then
-    install_dir="/home/$(whoami)"
+    install_dir="/home/$(whoami)/stable-diffusion"
 fi
 
 # Name of the subdirectory (defaults to stable-diffusion-webui)
@@ -35,7 +35,7 @@ fi
 # python3 executable
 if [[ -z "${python_cmd}" ]]
 then
-    python_cmd="python3"
+    python_cmd="python"
 fi
 
 # git executable
@@ -45,9 +45,9 @@ then
 fi
 
 # python3 venv without trailing slash (defaults to ${install_dir}/${clone_dir}/venv)
-if [[ -z "${venv_dir}" ]]
+if [[ -z "${venv}" ]]
 then
-    venv_dir="venv"
+    venv="sd"
 fi
 
 if [[ -z "${LAUNCH_SCRIPT}" ]]
@@ -115,10 +115,10 @@ do
     fi
 done
 
-if ! "${python_cmd}" -c "import venv" &>/dev/null
+if [[ ! -d "${HOME}/anaconda3" ]]
 then
     printf "\n%s\n" "${delimiter}"
-    printf "\e[1m\e[31mERROR: python3-venv is not installed, aborting...\e[0m"
+    printf "\e[1m\e[31mERROR: conda is not installed, aborting...\e[0m"
     printf "\n%s\n" "${delimiter}"
     exit 1
 fi
@@ -136,21 +136,23 @@ else
 fi
 
 printf "\n%s\n" "${delimiter}"
-printf "Create and activate python venv"
+printf "Create and activate python conda environment"
 printf "\n%s\n" "${delimiter}"
 cd "${install_dir}"/"${clone_dir}"/ || { printf "\e[1m\e[31mERROR: Can't cd to %s/%s/, aborting...\e[0m" "${install_dir}" "${clone_dir}"; exit 1; }
-if [[ ! -d "${venv_dir}" ]]
+if [[ ! -d "${HOME}/anaconda3/envs/${venv}" ]]
 then
-    "${python_cmd}" -m venv "${venv_dir}"
+    printf "Installing conda env with python 3.10"
+    conda create --name "${venv}" python=3.10 -y
     first_launch=1
 fi
 # shellcheck source=/dev/null
-if [[ -f "${venv_dir}"/bin/activate ]]
+if [ -e "${HOME}/anaconda3/envs/${venv}/bin/python" ]
 then
-    source "${venv_dir}"/bin/activate
+    printf "Activating ${venv} environment in conda"
+    conda activate "${venv}" >/dev/null 2>/dev/null
 else
     printf "\n%s\n" "${delimiter}"
-    printf "\e[1m\e[31mERROR: Cannot activate python venv, aborting...\e[0m"
+    printf "\e[1m\e[31mERROR: Cannot activate conda environment, aborting...\e[0m"
     printf "\n%s\n" "${delimiter}"
     exit 1
 fi
